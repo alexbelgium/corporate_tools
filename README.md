@@ -6,4 +6,4 @@ Tools to use in a corporate setting
 Simple batch script to update last modified files and avoid auto deletion 
 
 ## archivemailsi.cls
-Automatic script in outlook to archive emails and prevent auto-deletion
+Outlook script to archive emails
