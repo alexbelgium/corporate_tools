@@ -25,6 +25,25 @@ function Replace-InvalidChars {
 }
 
 # Function to save emails
+#function Save-Emails {
+#    param (
+#        [Microsoft.Office.Interop.Outlook.Folder]$folder
+#    )
+#    $items = $folder.Items.Restrict("[Categories] <> 'Archived'")
+#    foreach ($item in $items) {
+#        if ($item.MessageClass -eq "IPM.Note") {
+#            $mail = $item
+#            $subject = Replace-InvalidChars -fileName $mail.Subject
+#            $receivedTime = $mail.ReceivedTime.ToString("yyyyMMdd-HHmmss")
+#            $fileName = $receivedTime + "-" + $subject + ".msg"
+#            $mail.SaveAs($archivePath + $fileName, [Microsoft.Office.Interop.Outlook.OlSaveAsType]::olMSG)
+#            $mail.Categories = "Archived"
+#            $mail.Save()
+#        }
+#    }
+#}
+
+# Function to save emails with size check
 function Save-Emails {
     param (
         [Microsoft.Office.Interop.Outlook.Folder]$folder
@@ -36,12 +55,23 @@ function Save-Emails {
             $subject = Replace-InvalidChars -fileName $mail.Subject
             $receivedTime = $mail.ReceivedTime.ToString("yyyyMMdd-HHmmss")
             $fileName = $receivedTime + "-" + $subject + ".msg"
-            $mail.SaveAs($archivePath + $fileName, [Microsoft.Office.Interop.Outlook.OlSaveAsType]::olMSG)
+            $filePath = $archivePath + $fileName
+
+            # Check if the file already exists and compare sizes
+            if (Test-Path -Path $filePath) {
+                $existingFileSize = (Get-Item $filePath).length
+                $mailSize = $mail.Size
+                # If sizes are different, save with a unique name
+                if ($existingFileSize -ne $mailSize) {
+                    $uniqueFileName = $receivedTime + "-" + $subject + "-" + (Get-Random) + ".msg"
+                    $filePath = $archivePath + $uniqueFileName
+                }
+            }
+
+            $mail.SaveAs($filePath, [Microsoft.Office.Interop.Outlook.OlSaveAsType]::olMSG)
             $mail.Categories = "Archived"
             $mail.Save()
         }
-    }
-}
 
 # Check if the archive path exists, if not, create it
 if (-not (Test-Path -Path $archivePath)) {
